@@ -1,0 +1,95 @@
+# ffdnet
+echo  -e "ffdnet       CBSD68  35\n"
+echo  -e "ffdnet       CBSD68  35\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_color.pth --mode test --test_dataset CBSD68 --model_name ffdnet --rgb_range 1 --sigma 35 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo -e "ffdnet       CBSD68  25\n"
+echo -e "ffdnet       CBSD68  25\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_color.pth --mode test --test_dataset CBSD68 --model_name ffdnet --rgb_range 1 --sigma 25 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo -e "ffdnet       CBSD68  15\n"
+echo -e "ffdnet       CBSD68  15\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_color.pth --mode test --test_dataset CBSD68 --model_name ffdnet --rgb_range 1 --sigma 15 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+
+echo -e "ffdnet       McMaster  75\n"
+echo -e "ffdnet       McMaster  75\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_color.pth --mode test --test_dataset McMaster --model_name ffdnet --rgb_range 1 --sigma 75 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo -e "ffdnet       McMaster 50\n"
+echo -e "ffdnet       McMaster 50\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_color.pth --mode test --test_dataset McMaster --model_name ffdnet --rgb_range 1 --sigma 50 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo -e "ffdnet       McMaster  35\n"
+echo -e "ffdnet       McMaster  35\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_color.pth --mode test --test_dataset McMaster --model_name ffdnet --rgb_range 1 --sigma 35 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo -e "ffdnet       McMaster  25\n"
+echo -e "ffdnet       McMaster  25\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_color.pth --mode test --test_dataset McMaster --model_name ffdnet --rgb_range 1 --sigma 25 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo -e "ffdnet       McMaster  15\n"
+echo -e "ffdnet       McMaster  15\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_color.pth --mode test --test_dataset McMaster --model_name ffdnet --rgb_range 1 --sigma 15 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+
+echo -e "ffdnet       BSD68  50\n"
+echo -e "ffdnet       BSD68  50\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_gray.pth --mode test --test_dataset BSD68 --model_name ffdnet --rgb_range 1 --sigma 50 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+echo -e "ffdnet       BSD68  25\n"
+echo -e "ffdnet       BSD68  25\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_gray.pth --mode test --test_dataset BSD68 --model_name ffdnet --rgb_range 1 --sigma 25 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+echo -e "ffdnet       BSD68  15\n"
+echo -e "ffdnet       BSD68  15\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_gray.pth --mode test --test_dataset BSD68 --model_name ffdnet --rgb_range 1 --sigma 15 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+
+echo -e "ffdnet       Set12  50\n"
+echo -e "ffdnet       Set12  50\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_gray.pth --mode test --test_dataset Set12 --model_name ffdnet --rgb_range 1 --sigma 50 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+echo -e "ffdnet       Set12  25\n"
+echo -e "ffdnet       Set12  25\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_gray.pth --mode test --test_dataset Set12 --model_name ffdnet --rgb_range 1 --sigma 25 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+echo -e "ffdnet       Set12  15\n"
+echo -e "ffdnet       Set12  15\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/ffdnet/ffdnet_gray.pth --mode test --test_dataset Set12 --model_name ffdnet --rgb_range 1 --sigma 15 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+
+
+#DnCNN
+echo  -e "dncnn       CBSD68  15\n"
+echo  -e "dncnn       CBSD68  15\n" > result.txt
+trian.py --model_file_name  /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_color_blind.pth --mode test --test_dataset CBSD68 --model_name dncnn --rgb_range 1 --sigma 15 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo  -e "dncnn       CBSD68  25\n"
+echo  -e "dncnn       CBSD68  25\n" > result.txt
+trian.py --model_file_name  /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_color_blind.pth --mode test --test_dataset CBSD68 --model_name dncnn --rgb_range 1 --sigma 25 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo  -e "dncnn       CBSD68  35\n"
+echo  -e "dncnn       CBSD68  35\n" > result.txt
+trian.py --model_file_name  /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_color_blind.pth --mode test --test_dataset CBSD68 --model_name dncnn --rgb_range 1 --sigma 35 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo  -e "dncnn       CBSD68  50\n"
+echo  -e "dncnn       CBSD68  50\n" > result.txt
+trian.py --model_file_name  /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_color_blind.pth --mode test --test_dataset CBSD68 --model_name dncnn --rgb_range 1 --sigma 50 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+
+echo  -e "dncnn       McMaster  15\n"
+echo  -e "dncnn       McMaster  15\n" > result.txt
+trian.py --model_file_name  /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_color_blind.pth --mode test --test_dataset McMaster  --model_name dncnn --rgb_range 1 --sigma 15 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo  -e "dncnn       McMaster   25\n"
+echo  -e "dncnn       McMaster   25\n" > result.txt
+trian.py --model_file_name  /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_color_blind.pth --mode test --test_dataset McMaster  --model_name dncnn --rgb_range 1 --sigma 25 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo  -e "dncnn       McMaster   35\n"
+echo  -e "dncnn       McMaster   35\n" > result.txt
+trian.py --model_file_name  /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_color_blind.pth --mode test --test_dataset McMaster  --model_name dncnn --rgb_range 1 --sigma 35 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+echo  -e "dncnn       McMaster   50\n"
+echo  -e "dncnn       McMaster   50\n" > result.txt
+trian.py --model_file_name  /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_color_blind.pth --mode test --test_dataset McMaster  --model_name dncnn --rgb_range 1 --sigma 50 --n_GPUs 1 --GPU_id 2 --n_colors 3 > result.txt
+
+echo -e "dncnn       Set12  50\n"
+echo -e "dncnn       Set12  50\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_15.pth --mode test --test_dataset Set12 --model_name dncnn --rgb_range 1 --sigma 50 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+echo -e "dncnn       Set12  25\n"
+echo -e "dncnn       Set12  25\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_25.pth --mode test --test_dataset Set12 --model_name dncnn --rgb_range 1 --sigma 25 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+echo -e "dncnn       Set12  15\n"
+echo -e "dncnn       Set12  15\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_50.pth --mode test --test_dataset Set12 --model_name dncnn --rgb_range 1 --sigma 15 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+
+echo -e "dncnn       BSD68  50\n"
+echo -e "dncnn       BSD68  50\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_15.pth --mode test --test_dataset BSD68 --model_name dncnn --rgb_range 1 --sigma 50 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+echo -e "dncnn       BSD68  25\n"
+echo -e "dncnn       BSD68  25\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_25.pth --mode test --test_dataset BSD68 --model_name dncnn --rgb_range 1 --sigma 25 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+echo -e "dncnn       BSD68  15\n"
+echo -e "dncnn       BSD68  15\n" > result.txt
+python trian.py --model_file_name /home/zhengmenghua/Project/Denoising/model_zoo/dncnn/dncnn_50.pth --mode test --test_dataset BSD68 --model_name dncnn --rgb_range 1 --sigma 15 --n_GPUs 1 --GPU_id 2 --n_colors 1 > result.txt
+

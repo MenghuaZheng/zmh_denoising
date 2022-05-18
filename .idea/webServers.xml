@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="ef7e8227-a3e0-4b0c-bb12-1083c46a0b53" name="zmh_denoising">
+        <fileTransfer rootFolder="/home/zhengmenghua" accessType="SFTP" host="10.216.0.34" port="22" sshConfigId="cd75f11d-e38c-48af-aa78-fcc955f98e92" sshConfig="zhengmenghua@10.216.0.34:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

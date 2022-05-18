@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteMappingsManager">
+    <list>
+      <list>
+        <remote-mappings server-id="python@sftp://zhengmenghua@58.210.77.164:6024/home/zhengmenghua/.conda/envs/torch3/bin/python" />
+        <remote-mappings server-id="python@sftp://zhengmenghua@10.216.0.34:22/home/zhengmenghua/.conda/envs/torch3/bin/python">
+          <settings>
+            <list>
+              <mapping local-root="$PROJECT_DIR$" remote-root="/home/zhengmenghua/Project/zmh_denoising" />
+            </list>
+          </settings>
+        </remote-mappings>
+      </list>
+    </list>
+  </component>
+</project>
