@@ -1,6 +1,3 @@
-'''
-Github 20220518
-'''
 import glob
 import sys
 import cv2
