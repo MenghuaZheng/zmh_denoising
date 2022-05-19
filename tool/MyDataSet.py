@@ -109,7 +109,7 @@ class Art_nosie_Dataset(Dataset):   # 添加人工噪声
 
         # os.listdir() 方法用于返回指定的文件夹包含的文件或文件夹的名字的列表。这个列表以字母顺序
         filelist = os.listdir(data_dir)
-        S = 0
+
         for img_name in filelist:
             path_img = os.path.join(data_dir, img_name)
 
@@ -127,9 +127,6 @@ class Art_nosie_Dataset(Dataset):   # 添加人工噪声
 
         # img_lsit 为所有patches的集合
         img_list = list(chain(*img_list))
-
-        print("S:", S)
-        print("List:", sys.getsizeof(img_list))
 
         return img_list
 
@@ -361,21 +358,27 @@ class GenDataset(torch.utils.data.Dataset):
 
     def get_data(self):
 
+        img_list = list()
+
         for path_img in self.img_path_list:
             # 打开一张图片
             img = utils_image.imread_uint(path_img, n_channels=self.n_channels)  # RGB
             # 1张图片产生Patches
 
             patches = self.gen_patches(img, patch_size=self.patch_size, n=self.n_patches, aug_plus=self.args.aug_plus)
+            img_list.append(patches)
 
-            while len(patches) > 0:
-                # 逐个把数据返回,每次只返回一条
-                clean_img = patches.pop()
-                clean_img = utils_image.uint2tensor3(clean_img).mul(self.args.rgb_range / 255.)
+        img_list = list(chain(*img_list))
+        random.shuffle(img_list)
+        
+        while len(img_list) > 0:
+            # 逐个把数据返回,每次只返回一条
+            clean_img = img_list.pop()
+            clean_img = utils_image.uint2tensor3(clean_img).mul(self.args.rgb_range / 255.)
 
-                noise_img = add_noise(clean_img, noise_leve=self.nose_level, rgb_range=self.args.rgb_range)
+            noise_img = add_noise(clean_img, noise_leve=self.nose_level, rgb_range=self.args.rgb_range)
 
-                yield clean_img, noise_img
+            yield clean_img, noise_img
 
     def __len__(self):
         # 这里返回长度是用于tqdm进度条显示用的
