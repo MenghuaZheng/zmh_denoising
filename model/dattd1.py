@@ -1,35 +1,20 @@
 '''
     Dual agression and transform transformer-based Denoising(datt)
 '''
+import sys
+sys.path.append('../')
 
 import torch
 import torch.nn as nn
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 import torch.nn.functional as F
 from einops import rearrange
-from option import args
 import numpy as np
 import numbers
 
 
-def make_model(args, model_file_path=None):
-    if args.mode == 'train':
-        return DATTD(args), 1
-    elif args.mode == 'val':
-        model = DATTD(args)
-        model.eval()
-        return model, 1
-    elif args.mode == 'test':
-        if args.n_colors == 3:
-            nb = 20
-        else:
-            nb = 17
-        model = DATTD(args)
-        # model = DnCNN(in_nc=args.n_colors, out_nc=args.n_colors, nc=64, nb=17, act_mode='BR')
-        # model.load_state_dict(torch.load(args.model_file_name), strict=True)
-        model.eval()
-
-        return model, 1
+def make_model(args):
+    return DATTD(args), 1
 
 
 def default_conv(in_channels, out_channels, kernel_size, bias=True):
@@ -87,92 +72,67 @@ class DATTD(nn.Module):
             ResBlock(conv, n_feats, kernel_size, act=act),  # conv2
         )
 
-        # (32, 128, 128)
-        self.body1 = Dual_block_1(n_feats, img_patch_size, num_head1=4, num_head2=4, win_size=args.patch_size // 8, patch_dim=2,
-                                bias=True, LayerNorm_type='WithBias')
-        self.body2 = Dual_block_1(n_feats, img_patch_size, num_head1=4, num_head2=4, win_size=args.patch_size // 8, patch_dim=2,
-                                bias=True, LayerNorm_type='WithBias')
-        self.fusion1 = CSATransformerBlock(n_feats * 2, num_heads=8, bias=True, LayerNorm_type='WithBias')
-        self.patch_merge1 = Patch_Merge(n_feats*2, 4, 3)
+        # (128, 96, 96)
+        self.body1 = Dual_block_1(n_feats//2, img_patch_size, num_head1=4, num_head2=4, win_size=args.patch_size // 8, patch_dim=2,
+                                 bias=True, shift_size=0, LayerNorm_type='WithBias')
+        self.body2 = Dual_block_1(n_feats//2, img_patch_size, num_head1=4, num_head2=4, win_size=args.patch_size // 8, patch_dim=2,
+                                 bias=True, shift_size=0, LayerNorm_type='WithBias')
+        self.body3 = Dual_block_1(n_feats//2, img_patch_size, num_head1=4, num_head2=4, win_size=args.patch_size // 8, patch_dim=1,
+                                 bias=True, shift_size=args.patch_size // 8, LayerNorm_type='WithBias')
+        self.body4 = Dual_block_1(n_feats//2, img_patch_size, num_head1=4, num_head2=4, win_size=args.patch_size // 8, patch_dim=1,
+                                 bias=True, shift_size=args.patch_size // 8, LayerNorm_type='WithBias')
+        # self.fusion1 = CSATransformerBlock(n_feats * 2, num_heads=8, bias=True, LayerNorm_type='WithBias')
+        # self.patch_merge1 = Patch_Merge(n_feats*2, 4, 3)
+        self.patch_merge1 = nn.Conv2d(n_feats, n_feats, kernel_size=1)
 
-        # (64, 96, 96)
-        self.body3 = Dual_block_1(n_feats * 2, img_patch_size, num_head1=8, num_head2=4, win_size=args.patch_size // 8, patch_dim=2,
+        # (128, 96, 96)
+        self.body5 = Dual_block(n_feats, img_patch_size, num_head1=8, num_head2=4, win_size=args.patch_size // 4, patch_dim=2,
                                 bias=True, LayerNorm_type='WithBias')
-        self.body4 = Dual_block_1(n_feats * 2, img_patch_size, num_head1=8, num_head2=4, win_size=args.patch_size // 8, patch_dim=2,
+        self.body6 = Dual_block(n_feats, img_patch_size, num_head1=8, num_head2=4, win_size=args.patch_size // 4, patch_dim=3,
                                 bias=True, LayerNorm_type='WithBias')
-        self.fusion2 = CSATransformerBlock(n_feats * 4, num_heads=8, bias=True, LayerNorm_type='WithBias')
-        self.patch_merge2 = Patch_Merge(n_feats * 4, 3, 2)
+        # self.fusion2 = CSATransformerBlock(n_feats * 4, num_heads=8, bias=True, LayerNorm_type='WithBias')
+        # self.patch_merge2 = Patch_Merge(n_feats * 4, 3, 2)
+        self.patch_merge2 = nn.Conv2d(n_feats*2, n_feats*2, kernel_size=1)
 
-        # (128, 64, 64)
-        self.body5 = Dual_block_1(n_feats * 4, img_patch_size, num_head1=16, num_head2=4, win_size=args.patch_size // 4, patch_dim=2,
+        # (256, 96, 96)
+        self.body7 = Dual_block(n_feats * 2, img_patch_size, num_head1=16, num_head2=8, win_size=args.patch_size // 2, patch_dim=3,
                                   bias=True, LayerNorm_type='WithBias')
-        self.body6 = Dual_block_1(n_feats * 4, img_patch_size, num_head1=16, num_head2=4, win_size=args.patch_size // 4, patch_dim=2,
-                                  bias=True, LayerNorm_type='WithBias')
-        self.fusion3 = CSATransformerBlock(n_feats * 8, num_heads=8, bias=True, LayerNorm_type='WithBias')
-        self.patch_merge3 = Patch_Merge(n_feats * 8, 2, 3)
+        self.patch_merge3 = nn.Conv2d(n_feats * 4, n_feats, kernel_size=1)
 
-        # (64, 96, 96)
-        self.short_cut1 = nn.Conv2d(n_feats*8, n_feats*2, kernel_size=1)
-        self.body7 = Dual_block_1(n_feats * 2, img_patch_size, num_head1=4, num_head2=4, win_size=args.patch_size // 8,
-                                  patch_dim=2,
-                                  bias=True, LayerNorm_type='WithBias')
-        self.body8 = Dual_block_1(n_feats * 2, img_patch_size, num_head1=4, num_head2=4, win_size=args.patch_size // 8,
-                                  patch_dim=2,
-                                  bias=True, LayerNorm_type='WithBias')
-        self.fusion4 = CSATransformerBlock(n_feats * 4, num_heads=8, bias=True, LayerNorm_type='WithBias')
-        self.patch_merge4 = Patch_Merge(n_feats * 4, 3, 4)
-
-        # (32, 128, 128)
-        self.short_cut2 = nn.Conv2d(n_feats * 4, n_feats, kernel_size=1)
-        self.body9 = Dual_block_1(n_feats, img_patch_size, num_head1=4, num_head2=4, win_size=args.patch_size // 8,
-                                  patch_dim=2, bias=True, LayerNorm_type='WithBias')
-        self.body10 = Dual_block_1(n_feats, img_patch_size, num_head1=4, num_head2=4, win_size=args.patch_size // 8,
-                                  patch_dim=2, bias=True, LayerNorm_type='WithBias')
-        self.fusion5 = CSATransformerBlock(n_feats * 2, num_heads=8, bias=True, LayerNorm_type='WithBias')
+        # (128, 96, 96)
+        self.body8 = Dual_block(n_feats, img_patch_size, num_head1=8, num_head2=4, win_size=args.patch_size, patch_dim=6,
+                                bias=True, LayerNorm_type='WithBias')
+        self.patch_merge4 = nn.Conv2d(n_feats * 2, n_feats, kernel_size=1)
 
         self.tail = nn.Sequential(
-            conv(n_feats * 2, args.n_colors, kernel_size)  # conv
+            conv(n_feats, args.n_colors, kernel_size)  # conv
         )
 
     def forward(self, x):
+        _, C, H, W = x.shape()
         y = x
 
         x = self.sub_mean(x)
 
         x = self.head(x)
 
-        x1, x2 = self.body1(x, x)
+        x1, x2 = self.body1(x[0: C//2], x[C//2:])
         x1, x2 = self.body2(x1, x2)
-        x1 = torch.cat((x1, x2), dim=1)
-        x1 = self.fusion1(x1, x1, x1)
-        o1 = self.patch_merge1(x1)
-
-        x1, x2 = self.body3(o1, o1)
+        x1, x2 = self.body3(x1, x2)
         x1, x2 = self.body4(x1, x2)
-        x1 = torch.cat((x1, x2), dim=1)
-        x1 = self.fusion2(x1, x1, x1)
-        o2 = self.patch_merge1(x1)
+        o1 = x + self.patch_merge1(torch.cat((x1, x2), dim=1))
 
-        x1, x2 = self.body5(o2, o2)
+        x1, x2 = self.body5(o1, o1)
         x1, x2 = self.body6(x1, x2)
-        x1 = torch.cat((x1, x2), dim=1)
-        x1 = self.fusion3(x1, x1, x1)
-        o3 = self.patch_merge1(x1)
+        o2 = self.patch_merge2(torch.cat((x1+o1, x2+o1), dim=1))
 
-        o3 = self.short_cut1(torch.cat((o1, o3), dim=1))
-        x1, x2 = self.body7(o3, o3)
-        x1, x2 = self.body8(x1, x2)
-        x1 = torch.cat((x1, x2), dim=1)
-        x1 = self.fusion4(x1, x1, x1)
-        o4 = self.patch_merge4(x1)
+        x1, x2 = self.body7(o2, o2)
+        o3 = self.patch_merge3(torch.cat((x1 + o2, x2 + o2), dim=1))
 
-        o4 = self.short_cut2(torch.cat((o2, o4), dim=1))
-        x1, x2 = self.body9(o4, o4)
-        x1, x2 = self.body10(x1, x2)
-        x1 = torch.cat((x1, x2), dim=1)
-        x = self.fusion3(x1, x1, x1)
+        x1, x2 = self.body8(o3, o3)
+        o4 = self.patch_merge4(torch.cat((x1 + o3, x2 + o3), dim=1))
 
-        x = self.tail(x)
+        x = self.tail(o4)
 
         x = self.add_mean(x)
 
@@ -181,14 +141,13 @@ class DATTD(nn.Module):
 
 class Dual_block(nn.Module):
     ## double swin layer
-    def __init__(self, n_feat, img_patch_size, num_head, win_size, patch_dim,
-                 bias, LayerNorm_type,
-                 ):
+    def __init__(self, n_feat, img_patch_size, num_head1, num_head2, win_size, patch_dim,
+                 bias, LayerNorm_type):
         super(Dual_block, self).__init__()
 
         self.swin_block = Cascade_SwinLayer(dim=n_feat, img_patch_size=img_patch_size, window_size=win_size,
-                                            num_heads=num_head, patch_dim=patch_dim, bias=bias)
-        self.CSA = CSATransformerBlock(dim=n_feat, num_heads=8, bias=bias, LayerNorm_type=LayerNorm_type)
+                                            num_heads=num_head1, patch_dim=patch_dim, bias=bias)
+        self.CSA = CSATransformerBlock(dim=n_feat, num_heads=num_head2, bias=bias, LayerNorm_type=LayerNorm_type)
 
     def forward(self, x1, x2):
         out1 = self.swin_block(x1, x2, x2)
@@ -200,12 +159,12 @@ class Dual_block(nn.Module):
 class Dual_block_1(nn.Module):
     ## single swin layer
     def __init__(self, n_feat, img_patch_size, num_head1, num_head2, win_size, patch_dim,
-                 bias, LayerNorm_type,
+                 bias, LayerNorm_type, shift_size
                  ):
         super(Dual_block_1, self).__init__()
 
         self.swin_block = Singel_SwinLayer(dim=n_feat, img_patch_size=img_patch_size, window_size=win_size,
-                                            num_heads=num_head1, patch_dim=patch_dim, bias=bias)
+                                            num_heads=num_head1, patch_dim=patch_dim, bias=bias, shift_size=shift_size)
         self.CSA = CSATransformerBlock(dim=n_feat, num_heads=num_head2, bias=bias, LayerNorm_type=LayerNorm_type)
 
     def forward(self, x1, x2):
@@ -395,7 +354,7 @@ class Cascade_SwinLayer(nn.Module):
 
 
 class Singel_SwinLayer(nn.Module):
-    def __init__(self, dim, img_patch_size, window_size, num_heads, patch_dim, bias=True):
+    def __init__(self, dim, img_patch_size, window_size, num_heads, patch_dim, shift_size, bias=True):
         super(Singel_SwinLayer, self).__init__()
 
         self.input_resolution = (img_patch_size // patch_dim, img_patch_size // patch_dim)
@@ -409,12 +368,13 @@ class Singel_SwinLayer(nn.Module):
         self.k_1 = nn.Conv2d(dim, dim, kernel_size=1, bias=bias)
         self.v_1 = nn.Conv2d(dim, dim, kernel_size=1, bias=bias)
 
-        self.atten_proj_1 = nn.Conv2d(dim, dim, kernel_size=3, stride=1, padding=1, groups=dim, bias=bias)
-
-        self.mlp1 = nn.Conv2d(dim, dim, kernel_size=1, bias=bias)
+        self.atten_proj = nn.Sequential(
+                            nn.Conv2d(dim, dim, kernel_size=patch_dim, stride=1, padding=patch_dim//2, groups=dim, bias=bias),
+                            nn.Conv2d(dim, dim, kernel_size=1, bias=bias)
+                            )
 
         self.swin = SwinTransformerBlock(dim * patch_dim * patch_dim, self.input_resolution, num_heads,
-                                         window_size=self.win_resolution, shift_size=0)
+                                         window_size=self.win_resolution, shift_size=shift_size)
 
     def forward(self, q, k, v):
         shortcut = v
@@ -426,8 +386,6 @@ class Singel_SwinLayer(nn.Module):
             Piexl_Shuffle(
                 self.patch_unembed(
                     self.swin(q, k, v, self.input_resolution), self.input_resolution), self.patch_dim))
-
-        v = v + self.mlp1(v)
 
         return v
 
@@ -495,7 +453,7 @@ class WindowAttention(nn.Module):
         # self.attn_drop = nn.Dropout(attn_drop)
         # self.proj = nn.Linear(dim, dim)
 
-        self.proj_drop = nn.Dropout(proj_drop)
+        # self.proj_drop = nn.Dropout(proj_drop)
 
         trunc_normal_(self.relative_position_bias_table, std=.02)
         self.softmax = nn.Softmax(dim=-1)
@@ -517,6 +475,81 @@ class WindowAttention(nn.Module):
             self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)  # Wh*Ww,Wh*Ww,nH
         relative_position_bias = relative_position_bias.permute(2, 0, 1).contiguous()  # nH, Wh*Ww, Wh*Ww
         attn = attn + relative_position_bias.unsqueeze(0)
+
+        if mask is not None:
+            nW = mask.shape[0]
+            attn = attn.view(B_ // nW, nW, self.num_heads, N, N) + mask.unsqueeze(1).unsqueeze(0)
+            attn = attn.view(-1, self.num_heads, N, N)
+            attn = self.softmax(attn)
+        else:
+            attn = self.softmax(attn)
+
+        # attn = self.attn_drop(attn)
+
+        x = (attn @ v).transpose(1, 2).reshape(B_, N, C)
+        # x = self.proj(x)
+        # x = self.proj_drop(x)
+        return x
+
+    def extra_repr(self) -> str:
+        return f'dim={self.dim}, window_size={self.window_size}, num_heads={self.num_heads}'
+
+    def flops(self, N):
+        # calculate flops for 1 window with token length of N
+        flops = 0
+        # qkv = self.qkv(x)
+        flops += N * self.dim * 3 * self.dim
+        # attn = (q @ k.transpose(-2, -1))
+        flops += self.num_heads * N * (self.dim // self.num_heads) * N
+        #  x = (attn @ v)
+        flops += self.num_heads * N * N * (self.dim // self.num_heads)
+        # x = self.proj(x)
+        flops += N * self.dim * self.dim
+        return flops
+
+
+class WindowAttention1(nn.Module):
+    r""" Window based multi-head self attention (W-MSA) module with relative position bias.
+    It supports both of shifted and non-shifted window.
+
+    Args:
+        dim (int): Number of input channels.
+        window_size (tuple[int]): The height and width of the window.
+        num_heads (int): Number of attention heads.
+        qkv_bias (bool, optional):  If True, add a learnable bias to query, key, value. Default: True
+        qk_scale (float | None, optional): Override default qk scale of head_dim ** -0.5 if set
+        attn_drop (float, optional): Dropout ratio of attention weight. Default: 0.0
+        proj_drop (float, optional): Dropout ratio of output. Default: 0.0
+    """
+
+    def __init__(self, dim, window_size, num_heads, qkv_bias=True, qk_scale=None, attn_drop=0., proj_drop=0.):
+
+        super().__init__()
+        self.dim = dim
+        self.window_size = window_size  # Wh, Ww
+        self.num_heads = num_heads
+        head_dim = dim // num_heads
+        self.scale = qk_scale or head_dim ** -0.5
+
+        # define a parameter table of relative position bias
+        # without realtive_position
+
+        # self.proj_drop = nn.Dropout(proj_drop)
+
+        self.softmax = nn.Softmax(dim=-1)
+
+    def forward(self, q, k, v, mask=None):
+        """
+        Args:
+            x: input features with shape of (num_windows*B, N, C)
+            mask: (0/-inf) mask with shape of (num_windows, Wh*Ww, Wh*Ww) or None
+        """
+        B_, N, C = v.shape
+        qkv = torch.cat((q, k, v), dim=1).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
+
+        q = q * self.scale
+        attn = (q @ k.transpose(-2, -1))
 
         if mask is not None:
             nW = mask.shape[0]
@@ -589,7 +622,7 @@ class SwinTransformerBlock(nn.Module):
         self.norm_q = norm_layer(dim)
         self.norm_k = norm_layer(dim)
         self.norm_v = norm_layer(dim)
-        self.attn = WindowAttention(
+        self.attn = WindowAttention1(
             dim, window_size=to_2tuple(self.window_size), num_heads=num_heads,
             qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
 

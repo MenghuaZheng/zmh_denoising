@@ -454,7 +454,7 @@ if __name__ == '__main__':
         # test_data = DNCNNs_Dataset(args, data_dir=test_dir, mode='test')
         # test_loader = DataLoader(dataset=test_data, batch_size=1, shuffle=True)
 
-        test_data = My_Dataset(args, data_dir=test_dir, mode='test')
+        test_data = My_Test_Dataset(args, data_dir=test_dir, mode='test')
         test_loader = DataLoader(dataset=test_data, batch_size=1, shuffle=False)
 
         criterion = nn.MSELoss(reduction='sum')
